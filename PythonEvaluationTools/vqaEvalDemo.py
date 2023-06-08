@@ -25,7 +25,7 @@ fileTypes   = ['results', 'accuracy', 'evalQA', 'evalQuesType', 'evalAnsType']
 
 # An example result json file has been provided in './Results' folder.  
 # reFile = nlvr/vqa/Results/OpenEnded_mscoco_train2014_fake_results.json
-[resFile, accuracyFile, evalQAFile, evalQuesTypeFile, evalAnsTypeFile] = ['%s/Results/%s%s_%s_%s_%s_%s.json'%(dataDir, versionType, taskType, dataType, dataSubType, \
+[resFile, accuracyFile, evalQAFile, evalQuesTypeFile, evalAnsTypeFile] = ['%s/Results/ofa_plus_retrieval/%s%s_%s_%s_%s_%s.json'%(dataDir, versionType, taskType, dataType, dataSubType, \
 resultType, fileType) for fileType in fileTypes]  
 
 # create vqa object and vqaRes object
