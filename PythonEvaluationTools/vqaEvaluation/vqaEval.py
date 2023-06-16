@@ -7,6 +7,8 @@ import re
 # (https://github.com/tylin/coco-caption/blob/master/pycocoevalcap/eval.py).
 import sys
 
+from collections import defaultdict
+from collections import Counter
 
 class VQAEval:
 	def __init__(self, vqa, vqaRes, n=2):
@@ -89,9 +91,15 @@ class VQAEval:
 				ansDic['answer'] = ansDic['answer'].replace('\t', ' ')
 				ansDic['answer'] = ansDic['answer'].strip()
 			resAns = res[quesId]['answer']
-			resAns = resAns.replace('\n', ' ')
-			resAns = resAns.replace('\t', ' ')
-			resAns = resAns.strip()
+			if type(resAns) == list:
+				resAns = [a.replace('\n', ' ') for a in resAns]
+				resAns = [a.replace('\t', ' ') for a in resAns]
+				resAns = [a.strip() for a in resAns]
+			else:
+				resAns = resAns.replace('\n', ' ')
+				resAns = resAns.replace('\t', ' ')
+				resAns = resAns.strip()
+
 			gtAcc = []
 			gtAnswers = [ans['answer'] for ans in gts[quesId]['answers']]
 
@@ -99,12 +107,32 @@ class VQAEval:
 				for ansDic in gts[quesId]['answers']:
 					ansDic['answer'] = self.processPunctuation(ansDic['answer'])
 					ansDic['answer'] = self.processDigitArticle(ansDic['answer'])
-				resAns = self.processPunctuation(resAns)
-				resAns = self.processDigitArticle(resAns)
+				if type(resAns) == list:
+					resAns = [self.processPunctuation(a) for a in resAns]
+					resAns = [self.processDigitArticle(a) for a in resAns]
+				else:
+					resAns = self.processPunctuation(resAns)
+					resAns = self.processDigitArticle(resAns)
+			
+			def any_matching(ref_answer, model_answer):
+				return any([ref_answer == ma for ma in model_answer])
+			
+			def majority_voting_matching(ref_answer, model_answer):
+				# model_answer = [model_answer[4]]
+				counts = Counter(model_answer)
+				cs = sorted(counts.items(), key=lambda a:a[1])
+
+				return ref_answer == cs[-1][0]
+
+			def is_matched_f(ref_answer, model_answer): 
+				if type(model_answer) == list:
+					return any_matching(ref_answer, model_answer)
+				return ref_answer == model_answer
+			
 
 			for gtAnsDatum in gts[quesId]['answers']:
 				otherGTAns = [item for item in gts[quesId]['answers'] if item!=gtAnsDatum]
-				matchingAns = [item for item in otherGTAns if item['answer']==resAns]
+				matchingAns = [item for item in otherGTAns if is_matched_f(item['answer'], resAns)]
 				acc = min(1, float(len(matchingAns))/3)
 				gtAcc.append(acc)
 			quesType    = gts[quesId]['question_type']

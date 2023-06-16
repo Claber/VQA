@@ -19,9 +19,11 @@ __version__ = '0.9'
 import json
 import datetime
 import copy
+from itertools import groupby
+from operator import itemgetter
 
 class VQA:
-	def __init__(self, annotation_file=None, question_file=None):
+	def __init__(self, annotation_file=None, question_file=None, isGroupOn = False):
 		"""
        	Constructor of VQA helper class for reading and visualizing questions and answers.
         :param annotation_file (str): location of VQA annotation file
@@ -148,6 +150,7 @@ class VQA:
 		:param   resFile (str)     : file name of result file
 		:return: res (obj)         : result api object
 		"""
+		
 		res = VQA()
 		res.questions = json.load(open(quesFile))
 		res.dataset['info'] = copy.deepcopy(self.questions['info'])
@@ -158,7 +161,18 @@ class VQA:
 
 		print ('Loading and preparing results...     ')
 		time_t = datetime.datetime.utcnow()
-		anns    = json.load(open(resFile))
+		if type(resFile) == list:
+			anns_ = [json.load(open(f)) for f in resFile]
+			anns = {}
+			for one in anns_[0]:
+				anns[one["question_id"]] = [one["answer"]]
+			for one in anns_[1:]:
+				for s in one:
+					anns[s["question_id"]].append(s["answer"])
+			anns = [{"question_id":k, "answer":v} for k, v in anns.items()]
+				
+		else:
+			anns    = json.load(open(resFile))
 		assert type(anns) == list, 'results is not an array of objects'
 		annsQuesIds = [ann['question_id'] for ann in anns]
 		print("question number:", len(annsQuesIds), len(set(self.getQuesIds())))

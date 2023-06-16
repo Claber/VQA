@@ -1,0 +1,60 @@
+Overall Accuracy is: 29.79
+
+Per Question Type Accuracy is the following:
+four : 29.59
+seven : 27.59
+one : 27.91
+three : 29.62
+other : 30.42
+eight : 30.11
+six : 30.78
+five : 31.31
+ten : 37.32
+two : 27.90
+nine : 30.21
+
+
+Per Answer Type Accuracy is the following:
+other : 29.79
+
+
+
+OFA+retrieval:
+Overall Accuracy is: 29.79
+
+Per Question Type Accuracy is the following:
+four : 29.59
+seven : 27.59
+one : 27.91
+three : 29.62
+other : 30.42
+eight : 30.11
+six : 30.78
+five : 31.31
+ten : 37.32
+two : 27.90
+nine : 30.21
+
+Per Answer Type Accuracy is the following:
+other : 29.79
+
+
+OFA:
+Overall Accuracy is: 31.98
+
+Per Question Type Accuracy is the following:
+four : 31.36
+seven : 31.05
+one : 29.44
+three : 32.07
+other : 32.55
+eight : 31.34
+six : 36.14
+five : 34.23
+ten : 38.10
+two : 32.44
+nine : 28.69
+
+
+Per Answer Type Accuracy is the following:
+other : 31.98
