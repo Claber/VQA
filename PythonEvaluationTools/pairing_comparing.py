@@ -1,6 +1,7 @@
 import json, sys, os
 from itertools import groupby
 from operator import itemgetter
+from functools import reduce
 
 data_home = "/home/wolfe/code/nlvr/vqa/"
 annotation_path = data_home + "Annotations/mscoco_all_annotations.json"
@@ -70,7 +71,7 @@ def question_infor_formatter(tup):
     img_dir_index = 1 if id >=9009 else 0
     image_abs_path = formatters[img_dir_index](question[0]["image_id"], image_dirs[img_dir_index])
     subset_label = "train2014" if img_dir_index == 0 else "eval2014"
-    return f'question_id={ann["question_id"]}, subset={subset_label}, t_f={1 if is_t_f else 0}{1 if d1[0]["answer"].lower() in ("yes", "no") else 0}, {question[0]["question"]}, image @:{image_abs_path} -> score={s},{s2}, ans1_ofa={d1[0]["answer"]}, ans2_ofa_retrieval={d2[0]["answer"]}, ans_ref={str([a["answer"] for a in ann["answers"]])}, inter_rationals={str(inter_rationals)}'
+    return f'question_id={ann["question_id"]}, subset={subset_label}, t_f={1 if is_t_f else 0}{1 if d1[0]["answer"].lower() in ("yes", "no") else 0}, {question[0]["question"]}, image @: {image_abs_path} -> score={s},{s2}, ans1_ofa={d1[0]["answer"]}, ans2_ofa_retrieval={d2[0]["answer"]}, ans_ref={str([a["answer"] for a in ann["answers"]])}, inter_rationals={str(inter_rationals)}'
 
 def similarity(str1, str2, strict = False):
     ta = str1.split()
@@ -96,11 +97,17 @@ def similarity(str1, str2, strict = False):
 
     return float(len(inter))/float(len(all_t)) + second_score
 
-def score(e):
+def score_similarity_vannila_and_retrieval(e):
     return similarity(e[1][0]["answer"], e[2][0]["answer"])
 
-def score_1(e):
+def score_1_vannila_answer(e):
     return max([similarity(e[1][0]["answer"], a["answer"], True) for a in e[0]["answers"]])
+
+def score_1_retrieval_answer(e):
+    return max([similarity(e[2][0]["answer"], a["answer"], True) for a in e[0]["answers"]])
+
+def score_1_retrieval_minused_by_vannila_answer(e):
+    return reduce(lambda x, y: x+y, [similarity(e[2][0]["answer"], a["answer"], True) - similarity(e[1][0]["answer"], a["answer"], True) for a in e[0]["answers"]])/len(e[0]["answers"])
 
 
 def find_rationals(ann, d3):
@@ -111,9 +118,12 @@ def find_rationals(ann, d3):
         s = [(similarity(p[0], key1[0]), i) for i, p in enumerate(possibles)]
         index = sorted(s, key = lambda a:a[0])
         return possibles[index[-1][-1]]
+ann_filter_nine_only = lambda ann:ann["question_type"] == "nine"
+
 
 with open(annotation_path,'r') as af, open(ofa_vani_result,'r') as f1, open(ofa_plus_retrieval_result,'r') as f2, open(qestion_path,'r') as f3:
     ann_js = json.load(af)["annotations"]
+    ann_js = [ann for ann in ann_js]
     r1_js = json.load(f1)
     r2_js = json.load(f2)
     q_js = json.load(f3)["questions"]
@@ -135,7 +145,7 @@ with open(annotation_path,'r') as af, open(ofa_vani_result,'r') as f1, open(ofa_
 
 
     tuples  = [(ann, d1[ann["question_id"]], d2[ann["question_id"]], d3[ann["question_id"]], find_rationals(ann, d3) , i) for i, ann in enumerate(ann_js)]
-    _tuples_sorted = [ tuple(list(a) + [a[2][0]["answer"].lower() in ('yes', 'no')] + [score(a), score_1(a)])  for a in tuples]
+    _tuples_sorted = [ tuple(list(a) + [a[2][0]["answer"].lower() in ('yes', 'no')] + [score_similarity_vannila_and_retrieval(a), score_1_retrieval_minused_by_vannila_answer(a)])  for a in tuples]
     tuples_sorted = sorted(_tuples_sorted, key = lambda a: a[-2])
     c = 0
     for t in tuples_sorted:
